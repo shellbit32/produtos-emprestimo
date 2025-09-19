@@ -3,6 +3,7 @@ package rest.resource;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -15,12 +16,16 @@ import rest.dto.ParcelaSimulacaoDTO;
 import service.SimulacaoService;
 import model.Produto;
 
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import java.math.BigDecimal;
 import java.util.List;
 
 @Path("/simulacoes")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "Simulação de Empréstimo", description = "Operações para simulação de empréstimos")
 public class SimulacaoResource {
 
     private ProdutoRepository produtoRepository;
@@ -32,7 +37,12 @@ public class SimulacaoResource {
         this.simulacaoService = simulacaoService;
     }
 
-    @GET
+    @POST
+    @Operation(
+        summary = "Simular empréstimo",
+        description = "Realiza a simulação de um empréstimo baseado no produto selecionado, valor solicitado e prazo desejado. " +
+                     "Retorna informações detalhadas incluindo parcela mensal, valor total com juros e memória de cálculo."
+    )
     public Response simularEmprestimo(RequestSimulacaoEmprestimoDTO request){
         // Buscar o produto pelo ID
         Produto produto = produtoRepository.findById(request.getIdProduto());
