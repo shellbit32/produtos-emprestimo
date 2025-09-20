@@ -11,7 +11,7 @@ import model.Produto;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import rest.dto.RequestCriacaoProdutoDTO;
+import rest.dto.RequestProdutoDTO;
 
 import java.util.List;
 
@@ -35,14 +35,8 @@ public class ProdutoResource {
     )
     public Response listarProdutos() {
         List<Produto> produtos = produtoRepository.listAll();
-
         List<ProdutoDTO> produtosDTO = produtos.stream()
-            .map(produto -> ProdutoDTO.builder()
-                .id(produto.getId())
-                .nome(produto.getNome())
-                .taxaJurosAnual(produto.getTaxaJurosAnual())
-                .prazoMaximoMeses(produto.getPrazoMaximoMeses())
-                .build())
+            .map(this::converterParaDTO)
             .toList();
 
         return Response.ok(produtosDTO).build();
@@ -56,75 +50,80 @@ public class ProdutoResource {
     )
     public Response detalharProduto(@PathParam("id") Long idProduto) {
         Produto produto = produtoRepository.findById(idProduto);
-
         if (produto == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Produto não encontrado")
-                    .build();
+            return criarRespostaProdutoNaoEncontrado();
         }
 
-        ProdutoDTO produtoDto = ProdutoDTO.builder()
-                .id(produto.getId())
-                .nome(produto.getNome())
-                .taxaJurosAnual(produto.getTaxaJurosAnual())
-                .prazoMaximoMeses(produto.getPrazoMaximoMeses())
-                .build();
-
+        ProdutoDTO produtoDto = converterParaDTO(produto);
         return Response.ok(produtoDto).build();
     }
 
     @DELETE
     @Path("{id}")
     @Transactional
+    @Operation(
+            summary = "Deletar produto por ID",
+            description = "Remove um produto financeiro do sistema"
+    )
     public Response deletarProduto(@PathParam("id") Long idProduto) {
         Produto produto = produtoRepository.findById(idProduto);
-
         if (produto == null){
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Produto não encontrado")
-                    .build();
+            return criarRespostaProdutoNaoEncontrado();
         }
 
         produtoRepository.delete(produto);
-
         return Response.noContent().build();
     }
 
     @PUT
     @Path("{id}")
     @Transactional
-    // Look again at the name for RequestCriacaoProdutoDTO since it's not used just for creation anymore
-    public Response atualizarProduto(@PathParam("id") Long idProduto, RequestCriacaoProdutoDTO requestCriacaoProdutoDTO) {
+    @Operation(
+            summary = "Atualizar produto por ID",
+            description = "Atualiza os dados de um produto financeiro existente no sistema"
+    )
+    public Response atualizarProduto(@PathParam("id") Long idProduto, RequestProdutoDTO requestProdutoDTO) {
         Produto produto = produtoRepository.findById(idProduto);
-
         if (produto == null){
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Produto não encontrado")
-                    .build();
+            return criarRespostaProdutoNaoEncontrado();
         }
 
-        produto.setNome(requestCriacaoProdutoDTO.getNome());
-        produto.setTaxaJurosAnual(requestCriacaoProdutoDTO.getTaxaJurosAnual());
-        produto.setPrazoMaximoMeses(requestCriacaoProdutoDTO.getPrazoMaximoMeses());
-
+        atualizarDadosDoProduto(produto, requestProdutoDTO);
         return Response.noContent().build();
     }
 
     @POST
     @Transactional
-    public Response criarProduto(RequestCriacaoProdutoDTO requestCriacaoProdutoDTO){
-
-        /*
-            Use some constraint violation here. Using jakarta.validation.Validator
-            and jakarta.validation.ConstraintViolation ; if there is a violation,
-            create some DTO for a response error. All of that IF that is good practice
-         */
-
+    @Operation(
+            summary = "Criar novo produto",
+            description = "Cria um novo produto financeiro no sistema e retorna os dados do produto criado"
+    )
+    public Response criarProduto(RequestProdutoDTO requestProdutoDTO){
         Produto produto = new Produto();
-        produto.setNome(requestCriacaoProdutoDTO.getNome());
-        produto.setTaxaJurosAnual(requestCriacaoProdutoDTO.getTaxaJurosAnual());
-        produto.setPrazoMaximoMeses(requestCriacaoProdutoDTO.getPrazoMaximoMeses());
-
-        return Response.status(Response.Status.CREATED).entity(produto).build();
+        atualizarDadosDoProduto(produto, requestProdutoDTO);
+        produtoRepository.persist(produto);
+        return Response.status(Response.Status.CREATED).entity(converterParaDTO(produto)).build();
     }
+
+    private Response criarRespostaProdutoNaoEncontrado() {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Produto não encontrado")
+                .build();
+    }
+
+    private ProdutoDTO converterParaDTO(Produto produto) {
+        return ProdutoDTO.builder()
+                .id(produto.getId())
+                .nome(produto.getNome())
+                .taxaJurosAnual(produto.getTaxaJurosAnual())
+                .prazoMaximoMeses(produto.getPrazoMaximoMeses())
+                .build();
+    }
+
+    private void atualizarDadosDoProduto(Produto produto, RequestProdutoDTO produtoDTO) {
+        produto.setNome(produtoDTO.getNome());
+        produto.setTaxaJurosAnual(produtoDTO.getTaxaJurosAnual());
+        produto.setPrazoMaximoMeses(produtoDTO.getPrazoMaximoMeses());
+    }
+
 }
