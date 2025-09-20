@@ -12,6 +12,7 @@ import model.Produto;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import rest.dto.RequestProdutoDTO;
+import service.ProdutoService;
 
 import java.util.List;
 
@@ -22,10 +23,12 @@ import java.util.List;
 public class ProdutoResource {
 
     private ProdutoRepository produtoRepository;
+    private ProdutoService produtoService;
 
     @Inject
-    public ProdutoResource(ProdutoRepository produtoRepository) {
+    public ProdutoResource(ProdutoRepository produtoRepository, ProdutoService produtoService) {
         this.produtoRepository = produtoRepository;
+        this.produtoService = produtoService;
     }
 
     @GET
@@ -36,7 +39,7 @@ public class ProdutoResource {
     public Response listarProdutos() {
         List<Produto> produtos = produtoRepository.listAll();
         List<ProdutoDTO> produtosDTO = produtos.stream()
-            .map(this::converterParaDTO)
+            .map(produtoService::converterParaDTO)
             .toList();
 
         return Response.ok(produtosDTO).build();
@@ -54,7 +57,7 @@ public class ProdutoResource {
             return criarRespostaProdutoNaoEncontrado();
         }
 
-        ProdutoDTO produtoDto = converterParaDTO(produto);
+        ProdutoDTO produtoDto = produtoService.converterParaDTO(produto);
         return Response.ok(produtoDto).build();
     }
 
@@ -88,7 +91,7 @@ public class ProdutoResource {
             return criarRespostaProdutoNaoEncontrado();
         }
 
-        atualizarDadosDoProduto(produto, requestProdutoDTO);
+        produtoService.atualizarDadosDoProduto(produto, requestProdutoDTO);
         return Response.noContent().build();
     }
 
@@ -100,30 +103,15 @@ public class ProdutoResource {
     )
     public Response criarProduto(RequestProdutoDTO requestProdutoDTO){
         Produto produto = new Produto();
-        atualizarDadosDoProduto(produto, requestProdutoDTO);
+        produtoService.atualizarDadosDoProduto(produto, requestProdutoDTO);
         produtoRepository.persist(produto);
-        return Response.status(Response.Status.CREATED).entity(converterParaDTO(produto)).build();
+        return Response.status(Response.Status.CREATED).entity(produtoService.converterParaDTO(produto)).build();
     }
 
     private Response criarRespostaProdutoNaoEncontrado() {
         return Response.status(Response.Status.NOT_FOUND)
                 .entity("Produto não encontrado")
                 .build();
-    }
-
-    private ProdutoDTO converterParaDTO(Produto produto) {
-        return ProdutoDTO.builder()
-                .id(produto.getId())
-                .nome(produto.getNome())
-                .taxaJurosAnual(produto.getTaxaJurosAnual())
-                .prazoMaximoMeses(produto.getPrazoMaximoMeses())
-                .build();
-    }
-
-    private void atualizarDadosDoProduto(Produto produto, RequestProdutoDTO produtoDTO) {
-        produto.setNome(produtoDTO.getNome());
-        produto.setTaxaJurosAnual(produtoDTO.getTaxaJurosAnual());
-        produto.setPrazoMaximoMeses(produtoDTO.getPrazoMaximoMeses());
     }
 
 }

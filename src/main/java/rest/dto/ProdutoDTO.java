@@ -20,7 +20,7 @@ public class ProdutoDTO {
     @Schema(description = "Nome do produto financeiro", example = "Empréstimo Pessoal")
     private String nome;
 
-    @Schema(description = "Taxa de juros anual do produto (em decimal)", example = "0.18")
+    @Schema(description = "Taxa de juros anual do produto (em percentual)", example = "18.0")
     private Double taxaJurosAnual;
 
     @Schema(description = "Prazo máximo em meses para pagamento", example = "24")
