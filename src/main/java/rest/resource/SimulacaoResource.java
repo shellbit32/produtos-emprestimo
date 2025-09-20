@@ -17,6 +17,11 @@ import service.SimulacaoService;
 import model.Produto;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.math.BigDecimal;
@@ -43,7 +48,28 @@ public class SimulacaoResource {
         description = "Realiza a simulação de um empréstimo baseado no produto selecionado, valor solicitado e prazo desejado. " +
                      "Retorna informações detalhadas incluindo parcela mensal, valor total com juros e memória de cálculo."
     )
-    public Response simularEmprestimo(RequestSimulacaoEmprestimoDTO request){
+    @APIResponses(value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Simulação realizada com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ResponseSimulacaoEmprestimoDTO.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "400",
+            // Por enquanto só isso retorna 400
+            description = "Prazo solicitado excede o máximo permitido para este produto"
+        ),
+        @APIResponse(
+            responseCode = "404",
+            description = "Produto não encontrado"
+        )
+    })
+    public Response simularEmprestimo(
+            @RequestBody(description = "Dados da simulação de empréstimo", required = true)
+            RequestSimulacaoEmprestimoDTO request){
         // Buscar o produto pelo ID
         Produto produto = produtoRepository.findById(request.getIdProduto());
         if (produto == null) {
