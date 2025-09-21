@@ -1,19 +1,24 @@
 package rest.resource;
 
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import repository.ProdutoRepository;
 import rest.dto.RequestSimulacaoEmprestimoDTO;
 import rest.dto.ResponseSimulacaoEmprestimoDTO;
 import rest.dto.ProdutoDTO;
 import rest.dto.ParcelaSimulacaoDTO;
+import service.ProdutoService;
 import service.SimulacaoService;
+import rest.util.ResponseUtil;
 import model.Produto;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -37,7 +42,9 @@ public class SimulacaoResource {
     private SimulacaoService simulacaoService;
 
     @Inject
-    public SimulacaoResource(ProdutoRepository produtoRepository, SimulacaoService simulacaoService){
+    public SimulacaoResource(ProdutoRepository produtoRepository,
+                             SimulacaoService simulacaoService,
+                             ProdutoService produtoService){
         this.produtoRepository = produtoRepository;
         this.simulacaoService = simulacaoService;
     }
@@ -68,21 +75,22 @@ public class SimulacaoResource {
         )
     })
     public Response simularEmprestimo(
-            @RequestBody(description = "Dados da simulação de empréstimo", required = true)
-            RequestSimulacaoEmprestimoDTO request){
+            @Valid @RequestBody(description = "Dados da simulação de empréstimo", required = true)
+            RequestSimulacaoEmprestimoDTO request,
+            @Context UriInfo uriInfo){
         // Buscar o produto pelo ID
         Produto produto = produtoRepository.findById(request.getIdProduto());
         if (produto == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Produto não encontrado")
-                    .build();
+            return ResponseUtil.produtoNaoEncontrado(uriInfo);
         }
 
         // Validar se o prazo não excede o máximo do produto
         if (request.getPrazoMeses() > produto.getPrazoMaximoMeses()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Prazo solicitado excede o máximo permitido para este produto")
-                    .build();
+            return ResponseUtil.criarRespostaErro(
+                Response.Status.BAD_REQUEST,
+                "Prazo solicitado excede o máximo permitido para este produto",
+                uriInfo
+            );
         }
 
         // Calcular taxa de juros efetiva mensal

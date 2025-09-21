@@ -2,9 +2,12 @@ package rest.resource;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import repository.ProdutoRepository;
 import rest.dto.ProdutoDTO;
 import model.Produto;
@@ -19,6 +22,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import rest.dto.RequestProdutoDTO;
+import rest.util.ResponseUtil;
 import service.ProdutoService;
 
 import java.util.List;
@@ -82,10 +86,11 @@ public class ProdutoResource {
     })
     public Response detalharProduto(
             @Parameter(description = "ID do produto", example = "1", required = true)
-            @PathParam("id") Long idProduto) {
+            @PathParam("id") Long idProduto,
+            @Context UriInfo uriInfo) {
         Produto produto = produtoRepository.findById(idProduto);
         if (produto == null) {
-            return criarRespostaProdutoNaoEncontrado();
+            return ResponseUtil.produtoNaoEncontrado(uriInfo);
         }
 
         ProdutoDTO produtoDto = produtoService.converterParaDTO(produto);
@@ -111,10 +116,11 @@ public class ProdutoResource {
     })
     public Response deletarProduto(
             @Parameter(description = "ID do produto", example = "1", required = true)
-            @PathParam("id") Long idProduto) {
+            @PathParam("id") Long idProduto,
+            @Context UriInfo uriInfo) {
         Produto produto = produtoRepository.findById(idProduto);
         if (produto == null){
-            return criarRespostaProdutoNaoEncontrado();
+            return ResponseUtil.produtoNaoEncontrado(uriInfo);
         }
 
         produtoRepository.delete(produto);
@@ -141,11 +147,12 @@ public class ProdutoResource {
     public Response atualizarProduto(
             @Parameter(description = "ID do produto", example = "1", required = true)
             @PathParam("id") Long idProduto,
-            @RequestBody(description = "Dados do produto a ser atualizado", required = true)
-            RequestProdutoDTO requestProdutoDTO) {
+            @Valid @RequestBody(description = "Dados do produto a ser atualizado", required = true)
+            RequestProdutoDTO requestProdutoDTO,
+            @Context UriInfo uriInfo) {
         Produto produto = produtoRepository.findById(idProduto);
         if (produto == null){
-            return criarRespostaProdutoNaoEncontrado();
+            return ResponseUtil.produtoNaoEncontrado(uriInfo);
         }
 
         produtoService.atualizarDadosDoProduto(produto, requestProdutoDTO);
@@ -167,7 +174,7 @@ public class ProdutoResource {
         )
     )
     public Response criarProduto(
-            @RequestBody(description = "Dados do produto a ser criado", required = true)
+            @Valid @RequestBody(description = "Dados do produto a ser criado", required = true)
             RequestProdutoDTO requestProdutoDTO){
         Produto produto = new Produto();
         produtoService.atualizarDadosDoProduto(produto, requestProdutoDTO);
@@ -175,10 +182,5 @@ public class ProdutoResource {
         return Response.status(Response.Status.CREATED).entity(produtoService.converterParaDTO(produto)).build();
     }
 
-    private Response criarRespostaProdutoNaoEncontrado() {
-        return Response.status(Response.Status.NOT_FOUND)
-                .entity("Produto não encontrado")
-                .build();
-    }
 
 }
