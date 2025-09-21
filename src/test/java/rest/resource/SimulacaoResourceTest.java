@@ -1,6 +1,7 @@
 package rest.resource;
 
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import model.Produto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,9 @@ class SimulacaoResourceTest {
     @Mock
     private SimulacaoService simulacaoService;
 
+    @Mock
+    private UriInfo uriInfo;
+
     @InjectMocks
     private SimulacaoResource simulacaoResource;
 
@@ -45,7 +49,7 @@ class SimulacaoResourceTest {
         when(simulacaoService.calcularValorTotalComJuros(any(), any())).thenReturn(new BigDecimal("1000"));
         when(simulacaoService.gerarMemoriaCalculo(any(), any(), any(), any())).thenReturn(Arrays.asList(parcelaSimulacao));
 
-        Response response = simulacaoResource.simularEmprestimo(requestSimulacao);
+        Response response = simulacaoResource.simularEmprestimo(requestSimulacao, uriInfo);
 
         assertEquals(200, response.getStatus());
     }
@@ -54,7 +58,7 @@ class SimulacaoResourceTest {
     void simularEmprestimo_ProdutoNotFound() {
         when(produtoRepository.findById(any())).thenReturn(null);
 
-        Response response = simulacaoResource.simularEmprestimo(requestSimulacao);
+        Response response = simulacaoResource.simularEmprestimo(requestSimulacao, uriInfo);
 
         assertEquals(404, response.getStatus());
     }

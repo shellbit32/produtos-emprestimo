@@ -22,7 +22,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import rest.dto.RequestProdutoDTO;
-import rest.util.ResponseUtil;
+import rest.factory.ResponseFactory;
 import service.ProdutoService;
 
 import java.util.List;
@@ -90,7 +90,7 @@ public class ProdutoResource {
             @Context UriInfo uriInfo) {
         Produto produto = produtoRepository.findById(idProduto);
         if (produto == null) {
-            return ResponseUtil.produtoNaoEncontrado(uriInfo);
+            return ResponseFactory.produtoNaoEncontrado(uriInfo);
         }
 
         ProdutoDTO produtoDto = produtoService.converterParaDTO(produto);
@@ -120,7 +120,7 @@ public class ProdutoResource {
             @Context UriInfo uriInfo) {
         Produto produto = produtoRepository.findById(idProduto);
         if (produto == null){
-            return ResponseUtil.produtoNaoEncontrado(uriInfo);
+            return ResponseFactory.produtoNaoEncontrado(uriInfo);
         }
 
         produtoRepository.delete(produto);
@@ -147,12 +147,12 @@ public class ProdutoResource {
     public Response atualizarProduto(
             @Parameter(description = "ID do produto", example = "1", required = true)
             @PathParam("id") Long idProduto,
-            @Valid @RequestBody(description = "Dados do produto a ser atualizado", required = true)
-            RequestProdutoDTO requestProdutoDTO,
+            @RequestBody(description = "Dados do produto a ser atualizado", required = true)
+            @Valid RequestProdutoDTO requestProdutoDTO,
             @Context UriInfo uriInfo) {
         Produto produto = produtoRepository.findById(idProduto);
         if (produto == null){
-            return ResponseUtil.produtoNaoEncontrado(uriInfo);
+            return ResponseFactory.produtoNaoEncontrado(uriInfo);
         }
 
         produtoService.atualizarDadosDoProduto(produto, requestProdutoDTO);
@@ -174,8 +174,8 @@ public class ProdutoResource {
         )
     )
     public Response criarProduto(
-            @Valid @RequestBody(description = "Dados do produto a ser criado", required = true)
-            RequestProdutoDTO requestProdutoDTO){
+            @RequestBody(description = "Dados do produto a ser criado", required = true)
+            @Valid RequestProdutoDTO requestProdutoDTO){
         Produto produto = new Produto();
         produtoService.atualizarDadosDoProduto(produto, requestProdutoDTO);
         produtoRepository.persist(produto);

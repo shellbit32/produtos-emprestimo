@@ -3,7 +3,6 @@ package rest.resource;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -18,7 +17,7 @@ import rest.dto.ProdutoDTO;
 import rest.dto.ParcelaSimulacaoDTO;
 import service.ProdutoService;
 import service.SimulacaoService;
-import rest.util.ResponseUtil;
+import rest.factory.ResponseFactory;
 import model.Produto;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -75,18 +74,18 @@ public class SimulacaoResource {
         )
     })
     public Response simularEmprestimo(
-            @Valid @RequestBody(description = "Dados da simulação de empréstimo", required = true)
-            RequestSimulacaoEmprestimoDTO request,
+            @RequestBody(description = "Dados da simulação de empréstimo", required = true)
+            @Valid RequestSimulacaoEmprestimoDTO request,
             @Context UriInfo uriInfo){
         // Buscar o produto pelo ID
         Produto produto = produtoRepository.findById(request.getIdProduto());
         if (produto == null) {
-            return ResponseUtil.produtoNaoEncontrado(uriInfo);
+            return ResponseFactory.produtoNaoEncontrado(uriInfo);
         }
 
         // Validar se o prazo não excede o máximo do produto
         if (request.getPrazoMeses() > produto.getPrazoMaximoMeses()) {
-            return ResponseUtil.criarRespostaErro(
+            return ResponseFactory.criarRespostaErro(
                 Response.Status.BAD_REQUEST,
                 "Prazo solicitado excede o máximo permitido para este produto",
                 uriInfo

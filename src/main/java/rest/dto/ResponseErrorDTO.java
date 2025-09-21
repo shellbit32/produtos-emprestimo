@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Resposta padronizada para erros da API")
+@Schema(description = "Resposta para erros da API")
 public class ResponseErrorDTO {
 
     @Schema(description = "Código de status HTTP", example = "404")

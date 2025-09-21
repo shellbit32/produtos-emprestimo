@@ -1,6 +1,7 @@
 package rest.resource;
 
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import model.Produto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,9 @@ class ProdutoResourceTest {
     @Mock
     private ProdutoService produtoService;
 
+    @Mock
+    private UriInfo uriInfo;
+
     @InjectMocks
     private ProdutoResource produtoResource;
 
@@ -49,7 +53,7 @@ class ProdutoResourceTest {
         when(produtoRepository.findById(1L)).thenReturn(produto);
         when(produtoService.converterParaDTO(produto)).thenReturn(produtoDTO);
 
-        Response response = produtoResource.detalharProduto(1L);
+        Response response = produtoResource.detalharProduto(1L, uriInfo);
 
         assertEquals(200, response.getStatus());
     }
@@ -58,7 +62,7 @@ class ProdutoResourceTest {
     void detalharProduto_NotFound() {
         when(produtoRepository.findById(1L)).thenReturn(null);
 
-        Response response = produtoResource.detalharProduto(1L);
+        Response response = produtoResource.detalharProduto(1L, uriInfo);
 
         assertEquals(404, response.getStatus());
     }
@@ -76,7 +80,7 @@ class ProdutoResourceTest {
     void atualizarProduto() {
         when(produtoRepository.findById(1L)).thenReturn(produto);
 
-        Response response = produtoResource.atualizarProduto(1L, requestProdutoDTO);
+        Response response = produtoResource.atualizarProduto(1L, requestProdutoDTO, uriInfo);
 
         assertEquals(204, response.getStatus());
     }
@@ -85,7 +89,7 @@ class ProdutoResourceTest {
     void atualizarProduto_NotFound() {
         when(produtoRepository.findById(1L)).thenReturn(null);
 
-        Response response = produtoResource.atualizarProduto(1L, requestProdutoDTO);
+        Response response = produtoResource.atualizarProduto(1L, requestProdutoDTO, uriInfo);
 
         assertEquals(404, response.getStatus());
     }
@@ -94,7 +98,7 @@ class ProdutoResourceTest {
     void deletarProduto() {
         when(produtoRepository.findById(1L)).thenReturn(produto);
 
-        Response response = produtoResource.deletarProduto(1L);
+        Response response = produtoResource.deletarProduto(1L, uriInfo);
 
         assertEquals(204, response.getStatus());
     }
@@ -103,7 +107,7 @@ class ProdutoResourceTest {
     void deletarProduto_NotFound() {
         when(produtoRepository.findById(1L)).thenReturn(null);
 
-        Response response = produtoResource.deletarProduto(1L);
+        Response response = produtoResource.deletarProduto(1L, uriInfo);
 
         assertEquals(404, response.getStatus());
     }
